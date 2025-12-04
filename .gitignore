@@ -12,6 +12,10 @@ instance/
 .env.local
 .env.*.local
 
+# Gradio app - only for Hugging Face Spaces
+app.py
+app_gradio.py
+
 # Virtual environments
 venv/
 env/
