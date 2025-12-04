@@ -1,5 +1,6 @@
 import os
 import io
+import base64
 import numpy as np
 from flask import Flask, request, jsonify, render_template
 from PIL import Image
@@ -148,11 +149,6 @@ def index():
     """Render the main page"""
     return render_template('index.html')
 
-@app.route('/health')
-def health():
-    """Health check endpoint"""
-    return jsonify({'status': 'ok', 'service': 'Vietnamese OCR'}), 200
-
 @app.route('/api/process', methods=['POST'])
 def process_image():
     """
@@ -233,3 +229,4 @@ if __name__ == '__main__':
     print("="*60 + "\n")
     
     app.run(debug=True, host='0.0.0.0', port=5001)
+
