@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vietnamese OCR - Phục hồi dấu tiếng Việt</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 1em;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: 600;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+
+        .upload-area:hover {
+            background: #f0f2ff;
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragover {
+            background: #e8ebff;
+            border-color: #764ba2;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            color: #667eea;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .image-preview {
+            margin-top: 30px;
+            text-align: center;
+            display: none;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .text-input-area {
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results {
+            margin-top: 40px;
+            display: none;
+        }
+
+        .result-box {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .result-box h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .result-text {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #333;
+            word-wrap: break-word;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+            border: 1px solid #fcc;
+        }
+
+        .example {
+            background: #fff9e6;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .example h4 {
+            color: #f57c00;
+            margin-bottom: 10px;
+        }
+
+        .example-item {
+            margin: 8px 0;
+            color: #666;
+        }
+
+        .copy-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #45a049;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .subtitle {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🇻🇳 Vietnamese OCR</h1>
+        <p class="subtitle">Phục hồi dấu tiếng Việt từ văn bản không dấu</p>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="upload">📷 Upload Ảnh</button>
+            <button class="tab" data-tab="text">✏️ Nhập Text</button>
+        </div>
+
+        <!-- Upload Image Tab -->
+        <div class="tab-content active" id="upload">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📸</div>
+                <div class="upload-text">Click hoặc kéo thả ảnh vào đây</div>
+                <div class="upload-hint">Hỗ trợ: JPG, PNG, JPEG</div>
+                <input type="file" id="fileInput" accept="image/*">
+            </div>
+
+            <div class="image-preview" id="imagePreview">
+                <img id="previewImg" src="" alt="Preview">
+            </div>
+
+            <button class="button" id="processBtn" style="display: none;">
+                🚀 Xử lý ảnh
+            </button>
+        </div>
+
+        <!-- Text Input Tab -->
+        <div class="tab-content" id="text">
+            <div class="text-input-area">
+                <textarea id="textInput" placeholder="Nhập văn bản tiếng Việt không dấu...&#10;&#10;Ví dụ: Tung ck du lich"></textarea>
+            </div>
+
+            <button class="button" id="processTextBtn">
+                🚀 Phục hồi dấu
+            </button>
+
+            <div class="example">
+                <h4>📝 Ví dụ:</h4>
+                <div class="example-item">• <strong>Input:</strong> Tung ck du lich</div>
+                <div class="example-item">• <strong>Output:</strong> Tùng chuyển khoản du lịch</div>
+                <div class="example-item">• <strong>Input:</strong> Chuyen tien mua sam</div>
+                <div class="example-item">• <strong>Output:</strong> Chuyển tiền mua sắm</div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Đang xử lý...</p>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="results" id="results">
+            <div class="result-box">
+                <h3>📄 Văn bản gốc (không dấu):</h3>
+                <div class="result-text" id="originalText"></div>
+                <button class="copy-btn" onclick="copyToClipboard('originalText')">📋 Copy</button>
+            </div>
+
+            <div class="result-box">
+                <h3>✅ Văn bản đã có dấu:</h3>
+                <div class="result-text" id="restoredText"></div>
+                <button class="copy-btn" onclick="copyToClipboard('restoredText')">📋 Copy</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                
+                // Update tab buttons
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Update tab content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(tabName).classList.add('active');
+                
+                // Reset results
+                hideResults();
+            });
+        });
+
+        // Upload area interactions
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        const processBtn = document.getElementById('processBtn');
+        const processTextBtn = document.getElementById('processTextBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const error = document.getElementById('error');
+
+        let selectedFile = null;
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            if (!file.type.startsWith('image/')) {
+                showError('Vui lòng chọn file ảnh (JPG, PNG, JPEG)');
+                return;
+            }
+
+            selectedFile = file;
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+                imagePreview.style.display = 'block';
+                processBtn.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            
+            hideResults();
+        }
+
+        // Process image
+        processBtn.addEventListener('click', async () => {
+            if (!selectedFile) {
+                showError('Vui lòng chọn ảnh');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', selectedFile);
+
+            showLoading();
+            hideResults();
+            hideError();
+
+            try {
+                const response = await fetch('/api/process', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showResults(data.original_text, data.restored_text);
+                } else {
+                    showError(data.error || 'Có lỗi xảy ra');
+                }
+            } catch (err) {
+                showError('Không thể kết nối tới server: ' + err.message);
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Process text only
+        processTextBtn.addEventListener('click', async () => {
+            const text = document.getElementById('textInput').value.trim();
+            
+            if (!text) {
+                showError('Vui lòng nhập văn bản');
+                return;
+            }
+
+            showLoading();
+            hideResults();
+            hideError();
+
+            try {
+                const response = await fetch('/api/restore-text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showResults(data.original_text, data.restored_text);
+                } else {
+                    showError(data.error || 'Có lỗi xảy ra');
+                }
+            } catch (err) {
+                showError('Không thể kết nối tới server: ' + err.message);
+            } finally {
+                hideLoading();
+            }
+        });
+
+        function showLoading() {
+            loading.style.display = 'block';
+        }
+
+        function hideLoading() {
+            loading.style.display = 'none';
+        }
+
+        function showResults(original, restored) {
+            document.getElementById('originalText').textContent = original;
+            document.getElementById('restoredText').textContent = restored;
+            results.style.display = 'block';
+        }
+
+        function hideResults() {
+            results.style.display = 'none';
+        }
+
+        function showError(message) {
+            error.textContent = '❌ ' + message;
+            error.style.display = 'block';
+        }
+
+        function hideError() {
+            error.style.display = 'none';
+        }
+
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Đã copy vào clipboard!');
+            }).catch(err => {
+                alert('❌ Không thể copy: ' + err);
+            });
+        }
+    </script>
+</body>
+</html>
+

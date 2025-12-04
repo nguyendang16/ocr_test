@@ -1,0 +1,54 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Flask
+instance/
+.webassets-cache
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Vercel
+.vercel
+
+# PaddleOCR cache
+.paddleocr/
+
+# Test files
+test.png
+test_image.jpg
+*.jpg
+*.png
+*.jpeg
+!templates/*.png
+!static/*.png
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
